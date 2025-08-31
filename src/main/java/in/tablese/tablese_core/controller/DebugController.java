@@ -9,10 +9,17 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/debug")
+@RequestMapping("/api")
 public class DebugController {
 
-    @GetMapping("/headers")
+    // The new health check endpoint
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        System.out.println("Health check endpoint was called.");
+        return ResponseEntity.ok("OK");
+    }
+
+    @GetMapping("/debug/headers")
     public ResponseEntity<Map<String, String>> getHeaders(@RequestHeader Map<String, String> headers) {
         headers.forEach((key, value) -> {
             System.out.println("Header: " + key + " = " + value);

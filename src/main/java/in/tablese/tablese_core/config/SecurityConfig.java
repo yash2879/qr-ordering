@@ -28,11 +28,10 @@ public class SecurityConfig {
 
                 // Define the authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        // NEW RULE FOR DEBUGGING:
+                        // NEW RULE FOR HEALTH CHECK:
+                        .requestMatchers("/api/health").permitAll()
                         .requestMatchers("/api/debug/**").permitAll()
-                        // Existing public endpoint:
                         .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()
-                        // ALL other requests must be authenticated
                         .anyRequest().authenticated()
                 )
 
