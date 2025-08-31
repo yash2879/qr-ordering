@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - TableSe</title>
+</head>
+<body>
+<h1>Menu Management</h1>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Available</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Thymeleaf loop: Iterate over the 'menuItems' attribute from the model -->
+    <tr th:each="item : ${menuItems}">
+        <td th:text="${item.id}">1</td>
+        <td th:text="${item.name}">Masala Dosa</td>
+        <td th:text="${item.price}">90.0</td>
+        <td th:text="${item.available ? 'Yes' : 'No'}">Yes</td>
+        <td>
+            <a href="#">Edit</a> |
+            <a href="#">Delete</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<hr>
+
+<a href="#">Add New Menu Item</a>
+
+</body>
+</html>
