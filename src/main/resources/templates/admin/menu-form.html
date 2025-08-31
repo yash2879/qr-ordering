@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <!-- Use a dynamic title based on whether we are editing or adding -->
+    <title th:text="${menuItem.id == null ? 'Add New Item' : 'Edit Item'}">Menu Item Form</title>
+</head>
+<body>
+
+<h1 th:text="${menuItem.id == null ? 'Add New Menu Item' : 'Edit Menu Item'}">Form Title</h1>
+
+<!--
+  Thymeleaf form handling:
+  - th:action specifies the URL where the form will be submitted.
+  - th:object binds the entire form to the 'menuItem' object from our model.
+  - method="post" is crucial for sending the form data.
+-->
+<form th:action="@{/admin/dashboard/menu/save}" th:object="${menuItem}" method="post">
+
+    <!-- This hidden input holds the ID. It's necessary for updates. -->
+    <input type="hidden" th:field="*{id}" />
+
+    <div>
+        <label for="name">Item Name:</label><br>
+        <!-- th:field links this input to the 'name' property of the menuItem object -->
+        <input type="text" id="name" th:field="*{name}" required />
+    </div>
+    <br>
+    <div>
+        <label for="description">Description:</label><br>
+        <textarea id="description" th:field="*{description}" rows="4" cols="50"></textarea>
+    </div>
+    <br>
+    <div>
+        <label for="price">Price:</label><br>
+        <input type="number" id="price" step="0.01" th:field="*{price}" required />
+    </div>
+    <br>
+    <div>
+        <label for="isAvailable">Is Available:</label><br>
+        <!-- th:field also works for checkboxes -->
+        <input type="checkbox" id="isAvailable" th:field="*{available}" />
+    </div>
+    <br>
+    <div>
+        <button type="submit">Save Item</button>
+    </div>
+</form>
+
+<hr>
+<a href="/admin/dashboard">Back to Dashboard</a>
+
+</body>
+</html>

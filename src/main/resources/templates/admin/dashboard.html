@@ -25,7 +25,8 @@
         <td th:text="${item.price}">90.0</td>
         <td th:text="${item.available ? 'Yes' : 'No'}">Yes</td>
         <td>
-            <a href="#">Edit</a> |
+            <!-- Use th:href to create a dynamic link to the edit page -->
+            <a th:href="@{/admin/dashboard/menu/edit/{id}(id=${item.id})}">Edit</a> |
             <a href="#">Delete</a>
         </td>
     </tr>
@@ -34,7 +35,7 @@
 
 <hr>
 
-<a href="#">Add New Menu Item</a>
+<a th:href="@{/admin/dashboard/menu/new}">Add New Menu Item</a>
 
 </body>
 </html>
