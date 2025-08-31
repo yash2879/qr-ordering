@@ -14,9 +14,8 @@ public class DebugController {
 
     // The new health check endpoint
     @GetMapping("/health")
-    public ResponseEntity<String> healthCheck(@RequestHeader Map<String, String> headers) {
+    public ResponseEntity<String> healthCheck() {
         System.out.println("Health check endpoint was called.");
-        headers.forEach((key, value) -> System.out.println(key + " = " + value));
         return ResponseEntity.ok("OK");
     }
 
