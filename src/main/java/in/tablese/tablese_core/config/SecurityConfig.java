@@ -7,6 +7,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy; // <-- Import this
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,18 +23,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Disable CSRF for our stateless API
+                // Disable CSRF as we are not using browser forms with sessions
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // 2. Define authorization rules
+                // Define the authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        // Allow anyone to VIEW a menu
+                        // Public endpoints
                         .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()
                         // ALL other requests must be authenticated
                         .anyRequest().authenticated()
                 )
 
-                // 3. Configure basic authentication
+                // Configure our API to be STATELESS. This is key for production APIs.
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // Use HTTP Basic Authentication
                 .httpBasic(Customizer.withDefaults());
 
         return http.build();
