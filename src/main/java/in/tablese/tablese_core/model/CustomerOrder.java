@@ -1,5 +1,6 @@
 package in.tablese.tablese_core.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +23,7 @@ public class CustomerOrder {
 
     // An order can have many individual order items (e.g., 2x Pizza, 1x Coke)
     @OneToMany(mappedBy = "customerOrder", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<OrderItem> orderItems;
     
     // Many orders belong to one restaurant

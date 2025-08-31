@@ -1,5 +1,6 @@
 package in.tablese.tablese_core.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -13,6 +14,7 @@ public class OrderItem {
     // Many OrderItem entries can belong to one CustomerOrder
     @ManyToOne
     @JoinColumn(name = "customer_order_id", nullable = false)
+    @JsonBackReference
     private CustomerOrder customerOrder;
 
     // An OrderItem refers to one specific MenuItem
