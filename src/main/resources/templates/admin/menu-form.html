@@ -1,54 +1,51 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <!-- Use a dynamic title based on whether we are editing or adding -->
-    <title th:text="${menuItem.id == null ? 'Add New Item' : 'Edit Item'}">Menu Item Form</title>
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main-layout}">
+
 <body>
 
-<h1 th:text="${menuItem.id == null ? 'Add New Menu Item' : 'Edit Menu Item'}">Form Title</h1>
+<div layout:fragment="content">
 
-<!--
-  Thymeleaf form handling:
-  - th:action specifies the URL where the form will be submitted.
-  - th:object binds the entire form to the 'menuItem' object from our model.
-  - method="post" is crucial for sending the form data.
--->
-<form th:action="@{/admin/dashboard/menu/save}" th:object="${menuItem}" method="post">
+    <!-- Page Heading -->
+    <h1 class="h3 mb-4 text-gray-800" th:text="${menuItem.id == null ? 'Add New Menu Item' : 'Edit Menu Item'}">Form Title</h1>
 
-    <!-- This hidden input holds the ID. It's necessary for updates. -->
-    <input type="hidden" th:field="*{id}" />
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form th:action="@{/admin/dashboard/menu/save}" th:object="${menuItem}" method="post">
 
-    <div>
-        <label for="name">Item Name:</label><br>
-        <!-- th:field links this input to the 'name' property of the menuItem object -->
-        <input type="text" id="name" th:field="*{name}" required />
-    </div>
-    <br>
-    <div>
-        <label for="description">Description:</label><br>
-        <textarea id="description" th:field="*{description}" rows="4" cols="50"></textarea>
-    </div>
-    <br>
-    <div>
-        <label for="price">Price:</label><br>
-        <input type="number" id="price" step="0.01" th:field="*{price}" required />
-    </div>
-    <br>
-    <div>
-        <label for="isAvailable">Is Available:</label><br>
-        <!-- th:field also works for checkboxes -->
-        <input type="checkbox" id="isAvailable" th:field="*{available}" />
-    </div>
-    <br>
-    <div>
-        <button type="submit">Save Item</button>
-    </div>
-</form>
+                <!-- Hidden input for the ID, crucial for updates -->
+                <input type="hidden" th:field="*{id}" />
 
-<hr>
-<a href="/admin/dashboard">Back to Dashboard</a>
+                <div class="form-group">
+                    <label for="name">Item Name</label>
+                    <input type="text" class="form-control" id="name" th:field="*{name}" placeholder="Enter item name" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea class="form-control" id="description" th:field="*{description}" rows="3" placeholder="Enter a brief description"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="price">Price (₹)</label>
+                    <input type="number" class="form-control" id="price" step="0.01" th:field="*{price}" placeholder="e.g., 90.00" required />
+                </div>
+
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="isAvailable" th:field="*{available}" />
+                    <label class="form-check-label" for="isAvailable">Is this item currently available?</label>
+                </div>
+
+                <hr>
+
+                <button type="submit" class="btn btn-primary">Save Item</button>
+                <a th:href="@{/admin/dashboard}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+
+</div>
 
 </body>
 </html>

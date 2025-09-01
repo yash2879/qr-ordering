@@ -1,41 +1,67 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Admin Dashboard - TableSe</title>
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main-layout}">
+
 <body>
-<h1>Menu Management</h1>
 
-<table border="1">
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Price</th>
-        <th>Available</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <!-- Thymeleaf loop: Iterate over the 'menuItems' attribute from the model -->
-    <tr th:each="item : ${menuItems}">
-        <td th:text="${item.id}">1</td>
-        <td th:text="${item.name}">Masala Dosa</td>
-        <td th:text="${item.price}">90.0</td>
-        <td th:text="${item.available ? 'Yes' : 'No'}">Yes</td>
-        <td>
-            <!-- Use th:href to create a dynamic link to the edit page -->
-            <a th:href="@{/admin/dashboard/menu/edit/{id}(id=${item.id})}">Edit</a> |
-            <a href="#">Delete</a>
-        </td>
-    </tr>
-    </tbody>
-</table>
+<div layout:fragment="content">
 
-<hr>
+    <!-- Page Heading -->
+    <h1 class="h3 mb-2 text-gray-800">Menu Management</h1>
+    <p class="mb-4">Here you can view, add, edit, and manage all items on your menu.</p>
 
-<a th:href="@{/admin/dashboard/menu/new}">Add New Menu Item</a>
+    <!-- Add New Item Button -->
+    <div class="mb-4">
+        <a th:href="@{/admin/dashboard/menu/new}" class="btn btn-primary btn-icon-split">
+            <span class="icon text-white-50">
+                <i class="fas fa-plus"></i>
+            </span>
+            <span class="text">Add New Menu Item</span>
+        </a>
+    </div>
+
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Current Menu Items</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Available</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${menuItems}">
+                        <td th:text="${item.id}">1</td>
+                        <td th:text="${item.name}">Masala Dosa</td>
+                        <td th:text="${'₹' + #numbers.formatDecimal(item.price, 1, 2)}">₹90.00</td>
+                        <td>
+                            <span th:if="${item.available}" class="badge badge-success">Yes</span>
+                            <span th:unless="${item.available}" class="badge badge-danger">No</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/admin/dashboard/menu/edit/{id}(id=${item.id})}" class="btn btn-warning btn-circle btn-sm">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <!-- Delete button will be implemented later -->
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
 
 </body>
 </html>

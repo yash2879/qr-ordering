@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 // 3. Define the authorization rules
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/css/**", "/vendor/**", "/js/**", "/scss/**").permitAll()
                         .requestMatchers("/api/health").permitAll()
                         .requestMatchers("/api/debug/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()

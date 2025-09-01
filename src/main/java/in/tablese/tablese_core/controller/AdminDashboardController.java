@@ -15,7 +15,7 @@ import java.util.List;
 public class AdminDashboardController {
 
     private final MenuService menuService;
-    private static final Long TEMP_RESTAURANT_ID = 1L; // Hardcoded for now
+    private static final Long TEMP_RESTAURANT_ID = (Long) 1L; // Hardcoded for now
 
     @GetMapping
     public String showDashboard(Model model) {

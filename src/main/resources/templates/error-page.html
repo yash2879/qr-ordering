@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main-layout}">
+
+<body>
+
+<div layout:fragment="content">
+
+    <!-- 404 Error Text -->
+    <div class="text-center">
+        <div class="error mx-auto" data-text="Error" th:text="${errorCode}">404</div>
+        <p class="lead text-gray-800 mb-5">An Error Occurred</p>
+        <p class="text-gray-500 mb-0" th:text="${errorMessage}">It looks like you found a glitch in the matrix...</p>
+        <hr>
+        <a th:href="@{/admin/dashboard}">&larr; Back to Dashboard</a>
+    </div>
+
+</div>
+
+</body>
+</html>
