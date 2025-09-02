@@ -1,122 +1,244 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main-layout}">
+
 <head>
-    <meta charset="UTF-8">
     <title>Kitchen Hub - TableSe</title>
     <style>
-        body { font-family: Arial, sans-serif; }
+        /* We keep the same order card styles */
         .order-card {
             border: 2px solid #333;
             border-radius: 8px;
             padding: 15px;
-            margin: 10px;
-            width: 300px;
-            background-color: #f9f9f9;
+            margin-bottom: 20px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .order-card.new {
-            background-color: #ffffe0; /* Highlight new orders */
-            border-color: #ffc107;
-        }
-        .order-header {
-            font-size: 1.2em;
-            font-weight: bold;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-        }
-        #order-container {
-            display: flex;
-            flex-wrap: wrap;
+        .order-card[data-status="NEW"] { background-color: #fff3cd; border-color: #ffeeba; }
+        .order-card[data-status="PREPARING"] { background-color: #d1ecf1; border-color: #bee5eb; }
+        .order-card[data-status="COMPLETED"] { background-color: #d4edda; border-color: #c3e6cb; }
+        .order-actions { margin-top: 15px; }
+        .order-container-column {
+            min-height: 80vh;
         }
     </style>
-    <!-- 1. Include the necessary JS libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
+
 <body>
 
-<h1>Kitchen Order Display (Restaurant ID: <span th:text="${restaurantId}">1</span>)</h1>
-<h2 id="connection-status" style="color: red;">Connecting...</h2>
-<div id="order-container">
-    <!-- New orders will be added here by JavaScript -->
+<div layout:fragment="content">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Kitchen Hub (Restaurant ID: <span th:text="${restaurantId}">1</span>)</h1>
+        <span id="connection-status" class="badge badge-danger">Connecting...</span>
+    </div>
+
+    <!-- The Notification Sound -->
+    <audio id="notification-sound" src="https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c7443c.mp3" preload="auto"></audio>
+
+    <!-- Content Row for Kanban-style board -->
+    <div class="row">
+        <!-- New Orders Column -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">New Orders</h6>
+                </div>
+                <div class="card-body order-container-column" id="new-orders-col">
+                    <!-- New orders will be placed here -->
+                </div>
+            </div>
+        </div>
+        <!-- Preparing Column -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">Preparing</h6>
+                </div>
+                <div class="card-body order-container-column" id="preparing-orders-col">
+                    <!-- Preparing orders will be placed here -->
+                </div>
+            </div>
+        </div>
+        <!-- Completed Column -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Recently Completed</h6>
+                </div>
+                <div class="card-body order-container-column" id="completed-orders-col">
+                    <!-- Completed orders will be placed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- We need to include the JS libraries in the main content fragment -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <script th:inline="javascript">
+        // --- SETUP ---
+        const restaurantId = /*[[${restaurantId}]]*/ '1';
+
+        // UI Elements
+        const statusDisplay = document.getElementById('connection-status');
+        const notificationSound = document.getElementById('notification-sound');
+        const newOrdersCol = document.getElementById('new-orders-col');
+        const preparingOrdersCol = document.getElementById('preparing-orders-col');
+        const completedOrdersCol = document.getElementById('completed-orders-col');
+
+        // THE "ORDER STORE": A Map to hold all active orders by their ID.
+        // This is our single source of truth for the UI.
+        const orderStore = new Map();
+
+        let stompClient = null;
+
+        // --- DOM MANIPULATION ---
+
+        // NEW MASTER RENDER FUNCTION
+        function renderBoard() {
+            // 1. Clear all columns completely
+            newOrdersCol.innerHTML = '';
+            preparingOrdersCol.innerHTML = '';
+            completedOrdersCol.innerHTML = '';
+
+            if (orderStore.size === 0) {
+                newOrdersCol.innerHTML = '<div class="alert alert-info">No active orders right now.</div>';
+                return;
+            }
+
+            // 2. Iterate through the store and render each order
+            orderStore.forEach(order => {
+                let targetColumn;
+                if (order.status === 'NEW') targetColumn = newOrdersCol;
+                else if (order.status === 'PREPARING') targetColumn = preparingOrdersCol;
+                else if (order.status === 'COMPLETED') targetColumn = completedOrdersCol;
+                else return;
+
+                const orderCard = document.createElement('div');
+                orderCard.className = 'order-card';
+                orderCard.id = `order-${order.id}`;
+                orderCard.dataset.status = order.status;
+
+                let orderItemsHtml = '<ul>';
+                const items = order.items || order.orderItems; // Handle both DTO formats
+                items.forEach(item => {
+                    const itemName = item.itemName || item.menuItemName || (item.menuItem && item.menuItem.name);
+                    orderItemsHtml += `<li>${item.quantity} x ${itemName}</li>`;
+                });
+                orderItemsHtml += '</ul>';
+
+                let actionsHtml = '<div class="order-actions">';
+                if (order.status === 'NEW') {
+                    actionsHtml += `<button class="btn btn-info btn-sm" onclick="updateStatus(${order.id}, 'PREPARING')">Mark as Preparing</button>`;
+                }
+                if (order.status === 'PREPARING') {
+                    actionsHtml += `<button class="btn btn-success btn-sm" onclick="updateStatus(${order.id}, 'COMPLETED')">Mark as Completed</button>`;
+                }
+                if (order.status === 'COMPLETED') {
+                    actionsHtml += `<button class="btn btn-secondary btn-sm" onclick="dismissOrder(${order.id})">Dismiss</button>`;
+                }
+                actionsHtml += '</div>';
+
+                orderCard.innerHTML = `
+                    <h5>Table: ${order.tableNumber}</h5>
+                    <small>Time: ${new Date(order.orderTime).toLocaleTimeString()}</small>
+                    <hr class="my-2">
+                    ${orderItemsHtml}
+                    ${actionsHtml}
+                `;
+                targetColumn.prepend(orderCard);
+            });
+        }
+
+        function dismissOrder(orderId) {
+            // Remove from the store and re-render
+            orderStore.delete(orderId);
+            renderBoard();
+        }
+
+        // --- API & WEBSOCKETS ---
+        async function updateStatus(orderId, newStatus) {
+            try {
+                await fetch(`/api/orders/${orderId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newStatus: newStatus })
+                });
+            } catch (error) {
+                console.error('Failed to update order status:', error);
+                alert('Could not update order status.');
+            }
+        }
+
+        async function fetchInitialOrders() {
+            try {
+                const response = await fetch(`/api/orders/restaurant/${restaurantId}/active`);
+                if (!response.ok) throw new Error("Could not fetch active orders.");
+
+                const initialOrders = await response.json();
+                console.log("Initializing board with:", initialOrders);
+
+                // Populate the store with the initial orders
+                initialOrders.forEach(order => {
+                    orderStore.set(order.id, order);
+                });
+
+            } catch (error) {
+                console.error("Failed to initialize board:", error);
+                newOrdersCol.innerHTML = `<div class="alert alert-danger" id="error-message">Could not load existing orders.</div>`;
+            }
+        }
+
+        function connectWebSocket() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, frame => {
+                statusDisplay.textContent = 'Connected';
+                statusDisplay.className = 'badge badge-success';
+                const topic = `/topic/orders/${restaurantId}`;
+                stompClient.subscribe(topic, message => {
+                    const order = JSON.parse(message.body);
+
+                    // Add or update the order in our store
+                    orderStore.set(order.id, order);
+
+                    // Re-render the entire board with the new data
+                    renderBoard();
+
+                    // Play a sound only for genuinely new orders
+                    if (order.status === 'NEW') {
+                        notificationSound.play();
+                    }
+                });
+            }, error => {
+                statusDisplay.textContent = 'Disconnected';
+                statusDisplay.className = 'badge badge-danger';
+                setTimeout(connectWebSocket, 5000);
+            });
+        }
+
+        // --- INITIALIZATION ---
+        async function initializeBoard() {
+            // Clear the board first
+            newOrdersCol.innerHTML = '<div class="alert alert-info">Loading initial orders...</div>';
+
+            // First, fetch the existing orders and populate the store
+            await fetchInitialOrders();
+
+            // Now, render the entire board from the populated store.
+            // This will automatically remove the "Loading" or "Error" message.
+            renderBoard();
+
+            // Then, connect to the WebSocket for real-time updates
+            connectWebSocket();
+        }
+
+        initializeBoard();
+    </script>
 </div>
 
-<!-- The Notification Sound -->
-<audio id="notification-sound" src="https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c7443c.mp3" preload="auto"></audio>
-
-
-<script th:inline="javascript">
-    // 2. Get the restaurant ID from the Thymeleaf model
-    const restaurantId = /*[[${restaurantId}]]*/ '1';
-
-    // Get references to HTML elements
-    const orderContainer = document.getElementById('order-container');
-    const statusDisplay = document.getElementById('connection-status');
-    const notificationSound = document.getElementById('notification-sound');
-
-    let stompClient = null;
-
-    function connect() {
-        // Create a new WebSocket connection
-        const socket = new SockJS('/ws');
-        stompClient = Stomp.over(socket);
-
-        stompClient.connect({}, function (frame) {
-            // This function runs on successful connection
-            console.log('Connected: ' + frame);
-            statusDisplay.textContent = 'Connected';
-            statusDisplay.style.color = 'green';
-
-            // 3. Subscribe to the specific topic for this restaurant
-            const topic = `/topic/orders/${restaurantId}`;
-            stompClient.subscribe(topic, function (message) {
-                // This function runs every time a new message is received
-                console.log("Received message: ", message.body);
-                const order = JSON.parse(message.body);
-                displayNewOrder(order);
-            });
-
-        }, function(error) {
-            // This function runs on connection error
-            console.error('STOMP error', error);
-            statusDisplay.textContent = 'Disconnected. Retrying...';
-            statusDisplay.style.color = 'red';
-            setTimeout(connect, 5000); // Retry connection after 5 seconds
-        });
-    }
-
-    function displayNewOrder(order) {
-        // 4. Create a new HTML element for the order
-        const orderCard = document.createElement('div');
-        orderCard.className = 'order-card new'; // Add 'new' class for highlighting
-
-        let orderItemsHtml = '<ul>';
-        // Note: This assumes the 'orderItems' field exists in the JSON.
-        // We need to adjust our backend to send this data.
-        // For now, let's just show the order ID and table number.
-        orderItemsHtml = `Order ID: ${order.id}`;
-
-        orderCard.innerHTML = `
-            <div class="order-header">Table: ${order.tableNumber}</div>
-            <div>${orderItemsHtml}</div>
-            <small>Time: ${new Date(order.orderTime).toLocaleTimeString()}</small>
-        `;
-
-        // Add the new order card to the top of the container
-        orderContainer.prepend(orderCard);
-
-        // Play the notification sound
-        notificationSound.play();
-
-        // Remove the 'new' highlight after a few seconds
-        setTimeout(() => {
-            orderCard.classList.remove('new');
-        }, 5000);
-    }
-
-    // 5. Start the connection process when the page loads
-    connect();
-</script>
 </body>
 </html>

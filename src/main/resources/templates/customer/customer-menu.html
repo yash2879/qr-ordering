@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Menu - TableSe</title>
+
+    <!-- 1. Include Bootstrap CSS for quick, mobile-first styling -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* A little custom styling */
+        body {
+            background-color: #f8f9fa;
+        }
+        .menu-item-card {
+            margin-bottom: 20px;
+        }
+        .cart-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #007bff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .cart-fab:hover {
+            transform: scale(1.1);
+        }
+        .cart-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <div class="text-center mb-4">
+        <h1 class="display-4">Our Menu</h1>
+        <p class="lead">Table: <strong th:text="${tableNumber}">5A</strong></p>
+    </div>
+
+    <!-- 2. This is the container where our JavaScript will inject the menu items -->
+    <div id="menu-container" class="row">
+        <p class="col-12 text-center">Loading menu...</p>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<!-- Floating Action Button for Cart -->
+<div id="cart-fab" class="cart-fab" data-toggle="modal" data-target="#cartModal">
+    🛒
+    <span id="cart-badge" class="cart-badge" style="display: none;">0</span>
+</div>
+
+<!-- Cart Modal (Popup) -->
+<div class="modal fade" id="cartModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Your Order</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="cart-items-container">
+                    <p>Your cart is empty.</p>
+                </div>
+                <hr>
+                <h4 class="text-right">Total: ₹<span id="cart-total">0.00</span></h4>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="place-order-btn">Place Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script th:inline="javascript">
+    // --- SETUP ---
+    const restaurantId = /*[[${restaurantId}]]*/ '1';
+    const tableNumber = /*[[${tableNumber}]]*/ 'N/A';
+    const menuContainer = document.getElementById('menu-container');
+    const cartBadge = document.getElementById('cart-badge');
+    const cartItemsContainer = document.getElementById('cart-items-container');
+    const cartTotalSpan = document.getElementById('cart-total');
+    const placeOrderBtn = document.getElementById('place-order-btn');
+
+    // Initialize cart from sessionStorage or as an empty array
+    let cart = JSON.parse(sessionStorage.getItem('cart')) || [];
+
+    // --- CORE FUNCTIONS ---
+
+    // Adds an item to the cart or increments its quantity
+    function addToCart(id, name, price) {
+        const existingItem = cart.find(item => item.id === id);
+
+        if (existingItem) {
+            existingItem.quantity++;
+        } else {
+            cart.push({ id, name, price, quantity: 1 });
+        }
+
+        console.log('Cart updated:', cart);
+        saveCartAndRender();
+    }
+
+    // Renders the cart modal and updates badges/totals
+    function renderCart() {
+        if (cart.length === 0) {
+            cartItemsContainer.innerHTML = '<p>Your cart is empty.</p>';
+            cartBadge.style.display = 'none';
+            placeOrderBtn.disabled = true;
+        } else {
+            let total = 0;
+            let itemsHtml = '<ul class="list-group">';
+            cart.forEach(item => {
+                total += item.price * item.quantity;
+                itemsHtml += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${item.name}</strong><br>
+                            <small>₹${item.price.toFixed(2)}</small>
+                        </div>
+                        <span>Quantity: ${item.quantity}</span>
+                    </li>
+                `;
+            });
+            itemsHtml += '</ul>';
+
+            cartItemsContainer.innerHTML = itemsHtml;
+            cartTotalSpan.textContent = total.toFixed(2);
+
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartBadge.textContent = totalItems;
+            cartBadge.style.display = 'block';
+            placeOrderBtn.disabled = false;
+        }
+    }
+
+    // Saves the cart to session storage and triggers a re-render
+    function saveCartAndRender() {
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+        renderCart();
+    }
+
+    // Placeholder for placing the order
+    async function placeOrder() {
+        if(cart.length === 0) {
+            alert("Your cart is empty!");
+            return;
+        }
+
+        // 1. Format the cart data to match our backend DTO
+        const orderItems = cart.map(item => ({
+            menuItemId: item.id,
+            quantity: item.quantity
+        }));
+
+        const payload = {
+            restaurantId: restaurantId,
+            tableNumber: tableNumber,
+            items: orderItems
+        };
+
+        try {
+            // 2. Send the data to the backend using the Fetch API
+            const response = await fetch('/api/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                // If the server returns an error, show it
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Something went wrong');
+            }
+
+            // 3. Handle success
+            const createdOrder = await response.json();
+            console.log('Order successfully placed:', createdOrder);
+            alert(`Your order (#${createdOrder.id}) has been sent to the kitchen!`);
+
+            // 4. Clear the cart and close the modal
+            cart = [];
+            saveCartAndRender();
+            $('#cartModal').modal('hide');
+
+        } catch (error) {
+            // 5. Handle failure
+            console.error('Failed to place order:', error);
+            alert(`Error placing order: ${error.message}`);
+        }
+    }
+
+    // --- INITIALIZATION ---
+
+    // Fetch and display the menu on page load
+    (async function fetchMenu() {
+        try {
+            const response = await fetch(`/api/menu/${restaurantId}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const menuItems = await response.json();
+
+            menuContainer.innerHTML = ''; // Clear "Loading..." text
+
+            if(menuItems.length === 0) {
+                 menuContainer.innerHTML = '<p class="col-12 text-center">This menu is currently empty.</p>';
+                 return;
+            }
+
+            menuItems.forEach(item => {
+                if (item.isAvailable) {
+                    const menuItemCard = document.createElement('div');
+                    menuItemCard.className = 'col-md-6 col-lg-4';
+                    menuItemCard.innerHTML = `
+                        <div class="card menu-item-card">
+                            <div class="card-body">
+                                <h5 class="card-title d-flex justify-content-between">
+                                    <span>${item.name}</span>
+                                    <span>₹${item.price.toFixed(2)}</span>
+                                </h5>
+                                <p class="card-text text-muted">${item.description || ''}</p>
+                                <button class="btn btn-primary" onclick="addToCart(${item.id}, '${item.name}', ${item.price})">
+                                    Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    menuContainer.appendChild(menuItemCard);
+                }
+            });
+
+        } catch (error) {
+            console.error('Error fetching menu:', error);
+            menuContainer.innerHTML = '<p class="col-12 text-center text-danger">Could not load the menu. Please try again.</p>';
+        }
+    })();
+
+    // Initial render of the cart from sessionStorage
+    renderCart();
+
+    // Attach event listener to the place order button
+    placeOrderBtn.addEventListener('click', placeOrder);
+
+</script>
+
+
+</body>
+</html>

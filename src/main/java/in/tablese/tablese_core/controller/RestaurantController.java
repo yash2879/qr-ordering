@@ -1,5 +1,7 @@
 package in.tablese.tablese_core.controller;
 
+import in.tablese.tablese_core.dto.RestaurantDto;
+import in.tablese.tablese_core.mapper.RestaurantMapper;
 import in.tablese.tablese_core.model.Restaurant;
 import in.tablese.tablese_core.service.MenuService;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +17,10 @@ public class RestaurantController {
 
     private final MenuService menuService;
 
-    // Temporary endpoint to create a restaurant for testing
     @PostMapping
-    public Restaurant createRestaurant(@RequestBody Restaurant restaurant) {
-        return menuService.createRestaurant(restaurant);
+    public RestaurantDto createRestaurant(@RequestBody Restaurant restaurant) {
+        Restaurant createdRestaurant = menuService.createRestaurant(restaurant);
+        // Convert to DTO before sending the response
+        return RestaurantMapper.toDto(createdRestaurant);
     }
 }

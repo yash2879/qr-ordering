@@ -12,8 +12,8 @@ public class KitchenHubController {
 
     @GetMapping("/{restaurantId}")
     public String showKitchenHub(@PathVariable Long restaurantId, Model model) {
-        // We pass the restaurantId to the model so the HTML/JavaScript can use it
+        // Its only job is to pass the restaurantId and serve the page.
         model.addAttribute("restaurantId", restaurantId);
-        return "kitchen/hub"; // This will render hub.html
+        return "kitchen/hub";
     }
 }

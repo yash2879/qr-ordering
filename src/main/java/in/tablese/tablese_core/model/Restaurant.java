@@ -1,5 +1,6 @@
 package in.tablese.tablese_core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class Restaurant {
 
     // A restaurant can have many menu items
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<MenuItem> menuItems;
 
     // Getters and Setters
