@@ -10,5 +10,5 @@ import java.util.List;
 public interface MenuItemRepository extends JpaRepository<MenuItem, Long> {
 
     // Spring Data JPA automatically implements this method based on its name
-    List<MenuItem> findByRestaurantId(Long restaurantId);
+    List<MenuItem> findByRestaurantIdAndIsActiveTrue(Long restaurantId);
 }

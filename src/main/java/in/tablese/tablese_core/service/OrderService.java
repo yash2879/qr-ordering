@@ -100,7 +100,7 @@ public class OrderService {
     // NEW METHOD to get all active orders
     public List<CustomerOrder> getActiveOrdersForRestaurant(Long restaurantId) {
         // Define what "active" means for our business
-        List<String> activeStatuses = Arrays.asList("NEW", "PREPARING");
+        List<String> activeStatuses = Arrays.asList("NEW", "PREPARING", "COMPLETED");
 
         // Use our new repository method to fetch the data
         return customerOrderRepository.findByRestaurantIdAndStatusIn(restaurantId, activeStatuses);

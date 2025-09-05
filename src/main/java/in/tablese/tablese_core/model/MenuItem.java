@@ -21,6 +21,9 @@ public class MenuItem {
 
     private boolean isAvailable = true;
 
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean isActive = true;
+
     // Many menu items belong to one restaurant
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", nullable = false)
@@ -66,6 +69,14 @@ public class MenuItem {
 
     public void setAvailable(boolean available) {
         isAvailable = available;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
     public Restaurant getRestaurant() {

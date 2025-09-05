@@ -45,7 +45,7 @@ public class MenuService {
     // Method to get the full menu for a specific restaurant
     public List<MenuItem> getFullMenu(Long restaurantId) {
         // This uses the custom method we defined in the repository
-        return menuItemRepository.findByRestaurantId(restaurantId);
+        return menuItemRepository.findByRestaurantIdAndIsActiveTrue(restaurantId);
     }
     
     // Method to get a single menu item by its ID
@@ -69,5 +69,14 @@ public class MenuService {
 
         logger.info("Successfully updated menu item with ID {}", updatedItem.getId());
         return updatedItem;
+    }
+
+    @Transactional
+    public void deleteMenuItem(Long menuItemId) { // This is now a "soft delete"
+        logger.info("Attempting to soft-delete menu item with ID {}", menuItemId);
+        MenuItem item = getMenuItemById(menuItemId); // Reuses our existing method
+        item.setActive(false);
+        menuItemRepository.save(item);
+        logger.info("Successfully soft-deleted menu item with ID {}", menuItemId);
     }
 }
