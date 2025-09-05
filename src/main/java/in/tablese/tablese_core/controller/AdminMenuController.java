@@ -31,4 +31,12 @@ public class AdminMenuController {
         MenuItem updatedMenuItem = menuService.updateMenuItem(menuItemId, menuItemToUpdate);
         return ResponseEntity.ok(MenuItemMapper.toDto(updatedMenuItem));
     }
+
+    @DeleteMapping("/{menuItemId}")
+    public ResponseEntity<Void> deleteMenuItem(@PathVariable Long menuItemId) {
+        menuService.deleteMenuItem(menuItemId);
+
+        // A 204 No Content response is a standard and appropriate response for a successful deletion.
+        return ResponseEntity.noContent().build();
+    }
 }

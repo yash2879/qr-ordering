@@ -81,22 +81,52 @@
     <script th:inline="javascript">
         // --- SETUP ---
         const restaurantId = /*[[${restaurantId}]]*/ '1';
-
+        
         // UI Elements
         const statusDisplay = document.getElementById('connection-status');
         const notificationSound = document.getElementById('notification-sound');
         const newOrdersCol = document.getElementById('new-orders-col');
         const preparingOrdersCol = document.getElementById('preparing-orders-col');
         const completedOrdersCol = document.getElementById('completed-orders-col');
-
+        
         // THE "ORDER STORE": A Map to hold all active orders by their ID.
-        // This is our single source of truth for the UI.
         const orderStore = new Map();
-
+        
         let stompClient = null;
 
         // --- DOM MANIPULATION ---
 
+        // THIS IS THE CORRECT, UNIFIED RENDER/UPDATE FUNCTION
+        function renderOrUpdateOrder(order, playSound = false) {
+            let existingCard = document.getElementById(`order-${order.id}`);
+
+            // ** THIS IS THE CRITICAL FIX **
+            // If an order is archived, just remove it from the store and UI, then stop.
+            if (order.status === 'ARCHIVED') {
+                orderStore.delete(order.id);
+                if (existingCard) {
+                    existingCard.remove();
+                }
+                return; // End the function here.
+            }
+
+            // Add or update the order in our central store
+            orderStore.set(order.id, order);
+
+            // If the card exists, remove it before re-drawing it in the correct column
+            if (existingCard) {
+                existingCard.remove();
+            }
+            
+            // Re-render the entire board from the updated store
+            renderBoard();
+
+            // Play a sound only for genuinely new orders
+            if (playSound && order.status === 'NEW') {
+                notificationSound.play();
+            }
+        }
+        
         // NEW MASTER RENDER FUNCTION
         function renderBoard() {
             // 1. Clear all columns completely
@@ -115,7 +145,7 @@
                 if (order.status === 'NEW') targetColumn = newOrdersCol;
                 else if (order.status === 'PREPARING') targetColumn = preparingOrdersCol;
                 else if (order.status === 'COMPLETED') targetColumn = completedOrdersCol;
-                else return;
+                else return; // Don't render ARCHIVED or other statuses
 
                 const orderCard = document.createElement('div');
                 orderCard.className = 'order-card';
@@ -123,13 +153,13 @@
                 orderCard.dataset.status = order.status;
 
                 let orderItemsHtml = '<ul>';
-                const items = order.items || order.orderItems; // Handle both DTO formats
+                const items = order.items || order.orderItems;
                 items.forEach(item => {
                     const itemName = item.itemName || item.menuItemName || (item.menuItem && item.menuItem.name);
                     orderItemsHtml += `<li>${item.quantity} x ${itemName}</li>`;
                 });
                 orderItemsHtml += '</ul>';
-
+                
                 let actionsHtml = '<div class="order-actions">';
                 if (order.status === 'NEW') {
                     actionsHtml += `<button class="btn btn-info btn-sm" onclick="updateStatus(${order.id}, 'PREPARING')">Mark as Preparing</button>`;
@@ -154,9 +184,7 @@
         }
 
         function dismissOrder(orderId) {
-            // Remove from the store and re-render
-            orderStore.delete(orderId);
-            renderBoard();
+            updateStatus(orderId, 'ARCHIVED');
         }
 
         // --- API & WEBSOCKETS ---
@@ -172,20 +200,19 @@
                 alert('Could not update order status.');
             }
         }
-
+        
         async function fetchInitialOrders() {
             try {
                 const response = await fetch(`/api/orders/restaurant/${restaurantId}/active`);
                 if (!response.ok) throw new Error("Could not fetch active orders.");
-
                 const initialOrders = await response.json();
-                console.log("Initializing board with:", initialOrders);
-
-                // Populate the store with the initial orders
+                
+                // Clear the store before populating
+                orderStore.clear();
                 initialOrders.forEach(order => {
                     orderStore.set(order.id, order);
                 });
-
+                
             } catch (error) {
                 console.error("Failed to initialize board:", error);
                 newOrdersCol.innerHTML = `<div class="alert alert-danger" id="error-message">Could not load existing orders.</div>`;
@@ -201,17 +228,8 @@
                 const topic = `/topic/orders/${restaurantId}`;
                 stompClient.subscribe(topic, message => {
                     const order = JSON.parse(message.body);
-
-                    // Add or update the order in our store
-                    orderStore.set(order.id, order);
-
-                    // Re-render the entire board with the new data
-                    renderBoard();
-
-                    // Play a sound only for genuinely new orders
-                    if (order.status === 'NEW') {
-                        notificationSound.play();
-                    }
+                    // The WebSocket message is the single source of truth for an update.
+                    renderOrUpdateOrder(order, true);
                 });
             }, error => {
                 statusDisplay.textContent = 'Disconnected';
@@ -222,20 +240,12 @@
 
         // --- INITIALIZATION ---
         async function initializeBoard() {
-            // Clear the board first
             newOrdersCol.innerHTML = '<div class="alert alert-info">Loading initial orders...</div>';
-
-            // First, fetch the existing orders and populate the store
             await fetchInitialOrders();
-
-            // Now, render the entire board from the populated store.
-            // This will automatically remove the "Loading" or "Error" message.
             renderBoard();
-
-            // Then, connect to the WebSocket for real-time updates
             connectWebSocket();
         }
-
+        
         initializeBoard();
     </script>
 </div>

@@ -24,8 +24,6 @@ public class GlobalExceptionHandler {
         logger.warn("An unexpected error occurred", ex);
         model.addAttribute("errorCode", "500 Internal Server Error");
         model.addAttribute("errorMessage", "An unexpected error occurred. Please try again later.");
-        // For debugging, we can log the actual exception
-        System.err.println(ex.getMessage());
         return "error-page";
     }
 

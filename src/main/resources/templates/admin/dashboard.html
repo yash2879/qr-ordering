@@ -40,7 +40,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="item : ${menuItems}">
+                    <tr th:each="item : ${menuItems}" th:id="'menu-item-row-' + ${item.id}">
                         <td th:text="${item.id}">1</td>
                         <td th:text="${item.name}">Masala Dosa</td>
                         <td th:text="${'₹' + #numbers.formatDecimal(item.price, 1, 2)}">₹90.00</td>
@@ -49,10 +49,13 @@
                             <span th:unless="${item.available}" class="badge badge-danger">No</span>
                         </td>
                         <td>
-                            <a th:href="@{/admin/dashboard/menu/edit/{id}(id=${item.id})}" class="btn btn-warning btn-circle btn-sm">
+                            <a th:href="@{/admin/dashboard/menu/edit/{id}(id=${item.id})}" class="btn btn-warning btn-circle btn-sm" title="Edit">
                                 <i class="fas fa-pen"></i>
                             </a>
-                            <!-- Delete button will be implemented later -->
+                            <!-- This button is now ready for our JavaScript -->
+                            <button class="btn btn-danger btn-circle btn-sm btn-delete" th:data-id="${item.id}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </td>
                     </tr>
                     </tbody>
@@ -61,7 +64,48 @@
         </div>
     </div>
 
-</div>
+    <script>
+        // This function runs only after the full page is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Find all our delete buttons
+            const deleteButtons = document.querySelectorAll('.btn-delete');
 
+            // Add a click listener to each button
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const menuItemId = this.dataset.id;
+                    
+                    // Show a confirmation dialog
+                    if (confirm('Are you sure you want to delete this menu item?')) {
+                        deleteItem(menuItemId);
+                    }
+                });
+            });
+        });
+
+        async function deleteItem(menuItemId) {
+            try {
+                const response = await fetch(`/api/admin/menu-items/${menuItemId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    // On success, find the table row and remove it from the page
+                    const row = document.getElementById(`menu-item-row-${menuItemId}`);
+                    if (row) {
+                        row.remove();
+                    }
+                } else {
+                    // Handle errors from the server
+                    alert('Error: Could not delete the item.');
+                }
+            } catch (error) {
+                console.error('Failed to delete menu item:', error);
+                alert('An error occurred while trying to delete the item.');
+            }
+        }
+    </script>
+</div>
 </body>
 </html>
