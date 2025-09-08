@@ -41,6 +41,9 @@
                 <div th:if="${param.logout}" class="alert alert-success" role="alert">
                   You have been logged out.
                 </div>
+                <div th:if="${param.registered}" class="alert alert-success" role="alert">
+                  Registration successful! Please log in.
+                </div>
 
                 <!-- The form's action MUST be '/login' and method MUST be 'post' -->
                 <form class="user" th:action="@{/login}" method="post">
@@ -57,7 +60,10 @@
                     Login
                   </button>
                 </form>
-
+                <hr>
+                <div class="text-center">
+                  <a class="small" th:href="@{/register}">Create an Account!</a>
+                </div>
               </div>
             </div>
           </div>

@@ -4,11 +4,13 @@ import in.tablese.tablese_core.dto.CreateOrUpdateMenuItemRequest;
 import in.tablese.tablese_core.dto.MenuItemDto;
 import in.tablese.tablese_core.mapper.MenuItemMapper;
 import in.tablese.tablese_core.model.MenuItem;
+import in.tablese.tablese_core.service.CustomUserDetails;
 import in.tablese.tablese_core.service.MenuService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,9 +21,11 @@ public class AdminMenuController {
     private final MenuService menuService;
 
     @PostMapping
-    public ResponseEntity<MenuItemDto> addMenuItem(@Valid @RequestBody CreateOrUpdateMenuItemRequest request) {
+    public ResponseEntity<MenuItemDto> addMenuItem(@Valid @RequestBody CreateOrUpdateMenuItemRequest request,
+                                                   @AuthenticationPrincipal CustomUserDetails currentUser) {
+        Long restaurantId = currentUser.getRestaurantId();
         MenuItem menuItemToCreate = MenuItemMapper.toEntity(request);
-        MenuItem createdMenuItem = menuService.addMenuItem(request.restaurantId(), menuItemToCreate);
+        MenuItem createdMenuItem = menuService.addMenuItem(restaurantId, menuItemToCreate);
         return new ResponseEntity<>(MenuItemMapper.toDto(createdMenuItem), HttpStatus.CREATED);
     }
 

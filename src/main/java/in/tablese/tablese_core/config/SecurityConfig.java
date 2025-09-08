@@ -58,7 +58,7 @@ public class SecurityConfig {
                         // Allow all static resources
                         .requestMatchers("/css/**", "/vendor/**", "/js/**", "/scss/**", "/img/**").permitAll()
                         // The login page itself must be public
-                        .requestMatchers("/login").permitAll()
+                        .requestMatchers("/login", "/register").permitAll()
                         // All other web pages require authentication
                         .anyRequest().authenticated()
                 )

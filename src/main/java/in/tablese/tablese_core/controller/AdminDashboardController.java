@@ -1,8 +1,10 @@
 package in.tablese.tablese_core.controller;
 
 import in.tablese.tablese_core.model.MenuItem;
+import in.tablese.tablese_core.service.CustomUserDetails;
 import in.tablese.tablese_core.service.MenuService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -15,17 +17,12 @@ import java.util.List;
 public class AdminDashboardController {
 
     private final MenuService menuService;
-    private static final Long TEMP_RESTAURANT_ID = (Long) 1L; // Hardcoded for now
 
     @GetMapping
-    public String showDashboard(Model model) {
-        // 1. Fetch the menu items from the service layer
-        List<MenuItem> menuItems = menuService.getFullMenu(TEMP_RESTAURANT_ID);
-
-        // 2. Add the list of menu items to the model
+    public String showDashboard(Model model, @AuthenticationPrincipal CustomUserDetails currentUser) {
+        Long restaurantId = currentUser.getRestaurantId(); // Get ID from logged-in user
+        List<MenuItem> menuItems = menuService.getFullMenu(restaurantId);
         model.addAttribute("menuItems", menuItems);
-        
-        // 3. Return the name of the HTML template to display
         return "admin/dashboard";
     }
 
@@ -47,13 +44,15 @@ public class AdminDashboardController {
     }
 
     @PostMapping("/menu/save")
-    public String saveMenuItem(@ModelAttribute("menuItem") MenuItem menuItem) {
+    public String saveMenuItem(@ModelAttribute("menuItem") MenuItem menuItem,
+                               @AuthenticationPrincipal CustomUserDetails currentUser) {
         // The @ModelAttribute annotation automatically binds the form fields
         // to the properties of the menuItem object.
+        Long restaurantId = currentUser.getRestaurantId(); // Get ID from logged-in user
 
         if (menuItem.getId() == null) {
             // If the ID is null, it's a new item
-            menuService.addMenuItem(TEMP_RESTAURANT_ID, menuItem);
+            menuService.addMenuItem(restaurantId, menuItem);
         } else {
             // Otherwise, it's an existing item to be updated
             menuService.updateMenuItem(menuItem.getId(), menuItem);

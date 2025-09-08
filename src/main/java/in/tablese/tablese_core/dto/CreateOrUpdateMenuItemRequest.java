@@ -20,8 +20,6 @@ public record CreateOrUpdateMenuItemRequest(
     Double price,
 
     @NotNull(message = "Availability must be specified")
-    Boolean isAvailable,
+    Boolean isAvailable
 
-    @NotNull(message = "Restaurant ID cannot be null")
-    Long restaurantId
 ) {}
