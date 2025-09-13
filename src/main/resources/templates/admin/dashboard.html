@@ -241,7 +241,7 @@
                 const response = await fetch(`/api/admin/menu-items/${menuItemId}/availability`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ available: isAvailable })
+                    body: JSON.stringify({ isAvailable: isAvailable })
                 });
 
                 if (response.ok) {
