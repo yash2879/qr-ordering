@@ -79,4 +79,20 @@ public class MenuService {
         menuItemRepository.save(item);
         logger.info("Successfully soft-deleted menu item with ID {}", menuItemId);
     }
+
+    @Transactional
+    public void updateAvailability(Long restaurantId, Long menuId, boolean available) {
+        logger.info("Attempting to update availability of menu item ID {} for restaurant ID {}: available={}", menuId, restaurantId, available);
+        MenuItem menuItem = menuItemRepository.findById(menuId)
+                .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with id: " + menuId));
+
+        // Ensure the menu item belongs to the specified restaurant
+        if (!menuItem.getRestaurant().getId().equals(restaurantId)) {
+            throw new ResourceNotFoundException("Menu item with id: " + menuId + " does not belong to restaurant with id: " + restaurantId);
+        }
+
+        menuItem.setAvailable(available);
+        menuItemRepository.save(menuItem);
+        logger.info("Successfully updated availability of menu item ID {} to {}", menuId, available);
+    }
 }
