@@ -203,7 +203,6 @@
             // 3. Handle success
             const createdOrder = await response.json();
             console.log('Order successfully placed:', createdOrder);
-            alert(`Your order (#${createdOrder.id}) has been sent to the kitchen!`);
 
             // 4. Clear the cart and close the modal
             cart = [];

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Welcome to TableSe</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+  <style>
+    body {
+        font-family: 'Nunito', sans-serif;
+    }
+    .hero {
+        background: linear-gradient(to right, #6a11cb, #2575fc);
+        color: white;
+        padding: 100px 0;
+        text-align: center;
+    }
+    .hero h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+    }
+    .hero p {
+        font-size: 1.25rem;
+        margin-bottom: 30px;
+    }
+    .feature-icon {
+        font-size: 3rem;
+        color: #2575fc;
+    }
+    .features {
+        padding: 80px 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+  <div class="container">
+    <a class="navbar-brand font-weight-bold" href="#">TableSe</a>
+    <div class="ml-auto">
+      <a th:href="@{/login}" class="btn btn-outline-primary mr-2">Login</a>
+      <a th:href="@{/register}" class="btn btn-primary">Sign Up</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<div class="hero">
+  <div class="container">
+    <h1>Modernize Your Menu. Delight Your Customers.</h1>
+    <p>Dynamic QR code menus and a real-time ordering system that flows directly to your kitchen.</p>
+    <a th:href="@{/register}" class="btn btn-light btn-lg">Get Started for Free</a>
+  </div>
+</div>
+
+<!-- Features Section -->
+<div class="features container text-center">
+  <div class="row">
+    <div class="col-md-4">
+      <div class="feature-icon mb-3">📱</div>
+      <h3>Contactless QR Menus</h3>
+      <p class="text-muted">Customers can view your full menu instantly on their own devices. Update prices and availability anytime, for free.</p>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-icon mb-3">🚀</div>
+      <h3>Real-Time Kitchen Hub</h3>
+      <p class="text-muted">New orders appear instantly on a simple, interactive display in your kitchen, improving speed and accuracy.</p>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-icon mb-3">📈</div>
+      <h3>Increased Efficiency</h3>
+      <p class="text-muted">Free up your staff to focus on great service instead of just taking orders. Turn tables faster and increase sales.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="py-4 bg-light text-center">
+  <div class="container">
+    <p class="m-0 text-muted">Copyright &copy; TableSe 2025</p>
+  </div>
+</footer>
+
+</body>
+</html>

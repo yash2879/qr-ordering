@@ -2,8 +2,6 @@ package in.tablese.tablese_core.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -24,59 +22,57 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // This bean is shared by both configurations
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // --- CONFIGURATION #1: For the STATELESS REST API (/api/**) ---
+    // --- CONSOLIDATED SINGLE SECURITY FILTER CHAIN ---
     @Bean
-    @Order(1) // This chain is checked first
-    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/**") // This chain ONLY applies to URLs starting with /api/
+                // Enable CORS for all requests
                 .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/health", "/api/debug/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()
-                        .anyRequest().authenticated()
+
+                // Disable CSRF ONLY for our API paths, but keep it enabled for the web UI
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/**")
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .httpBasic(Customizer.withDefaults()); // Use HTTP Basic Auth for APIs
 
-        return http.build();
-    }
-
-    // --- CONFIGURATION #2: For the STATEFUL Web UI (Everything else) ---
-    @Bean
-    @Order(2) // This chain is checked for any URL not matching the one above
-    public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
+                // Define authorization rules for all requests
                 .authorizeHttpRequests(auth -> auth
-                        // Allow all static resources
+                        // Public Static Resources
                         .requestMatchers("/css/**", "/vendor/**", "/js/**", "/scss/**", "/img/**").permitAll()
-                        // The login page itself must be public
-                        .requestMatchers("/login", "/register").permitAll()
-                        // All other web pages require authentication
+                        // Public API Endpoints
+                        .requestMatchers("/api/health", "/api/debug/**", "/api/menu/**").permitAll()
+                        // NEW RULE: Make the customer menu pages public
+                        .requestMatchers("/menu/**").permitAll()
+                        // The login and registration pages must be public
+                        .requestMatchers("/", "/login", "/register").permitAll()
+                        // All other requests must be authenticated
                         .anyRequest().authenticated()
                 )
+
+                // Configure form login for our stateful web UI
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/admin/dashboard", false) // Intelligent redirect
+                        .defaultSuccessUrl("/admin/dashboard", false) // Use intelligent redirect
                         .permitAll()
                 )
+
+                // Configure logout
                 .logout(logout -> logout
-                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                        .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
-                );
+                )
+                // Enable HTTP Basic Auth as another option, which our API can use
+                .httpBasic(Customizer.withDefaults());
 
         return http.build();
     }
 
-    // --- CORS Configuration Bean (Used by the API Security Chain) ---
+    // --- CORS Configuration Bean ---
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

@@ -212,7 +212,6 @@
                 initialOrders.forEach(order => {
                     orderStore.set(order.id, order);
                 });
-                
             } catch (error) {
                 console.error("Failed to initialize board:", error);
                 newOrdersCol.innerHTML = `<div class="alert alert-danger" id="error-message">Could not load existing orders.</div>`;
