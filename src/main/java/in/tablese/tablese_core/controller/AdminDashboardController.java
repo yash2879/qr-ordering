@@ -28,10 +28,16 @@ public class AdminDashboardController {
      */
     @GetMapping
     public String showDashboard(Model model, @AuthenticationPrincipal CustomUserDetails currentUser) {
+        model.addAttribute("username", currentUser.getUsername());
+        return "admin/dashboard";
+    }
+
+    @GetMapping("/menu-management")
+    public String showMenuManagement(Model model, @AuthenticationPrincipal CustomUserDetails currentUser) {
         Long restaurantId = currentUser.getRestaurantId(); // Get ID from logged-in user
         List<MenuItem> menuItems = menuService.getFullMenu(restaurantId);
         model.addAttribute("menuItems", menuItems);
-        return "admin/dashboard";
+        return "admin/menu-management";
     }
 
     /**

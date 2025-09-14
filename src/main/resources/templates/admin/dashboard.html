@@ -2,262 +2,107 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/main-layout}">
-
 <body>
-
 <div layout:fragment="content">
 
-    <style>
-        /* Custom styles for the availability toggle switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #e74a3b; /* Red for 'No' */
-            -webkit-transition: .4s;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            -webkit-transition: .4s;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: #1cc88a; /* Green for 'Yes' */
-        }
-
-        input:checked + .slider:before {
-            -webkit-transform: translateX(26px);
-            -ms-transform: translateX(26px);
-            transform: translateX(26px);
-        }
-
-        /* Styling for the toast notification container */
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1055; /* Higher than other elements */
-        }
-    </style>
-
     <!-- Page Heading -->
-    <h1 class="h3 mb-2 text-gray-800">Menu Management</h1>
-    <p class="mb-4">Here you can view, add, edit, and manage all items on your menu.</p>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Admin Dashboard</h1>
+    </div>
 
-    <!-- Add New Item Button -->
     <div class="mb-4">
-        <a th:href="@{/admin/dashboard/menu/new}" class="btn btn-primary btn-icon-split">
-            <span class="icon text-white-50">
-                <i class="fas fa-plus"></i>
-            </span>
-            <span class="text">Add New Menu Item</span>
-        </a>
+        <h5 class="text-gray-600">Welcome back, <span th:text="${username}">Admin</span>!</h5>
+        <p class="text-gray-600">Here's a quick overview of your restaurant's operations.</p>
     </div>
 
+    <!-- Content Row - Dashboard Cards -->
+    <div class="row">
 
-    <!-- DataTales Example -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Current Menu Items</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Price</th>
-                        <th>Available</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="item : ${menuItems}" th:id="'menu-item-row-' + ${item.id}">
-                        <td th:text="${item.id}">1</td>
-                        <td th:text="${item.name}">Masala Dosa</td>
-                        <td th:text="${'₹' + #numbers.formatDecimal(item.price, 1, 2)}">₹90.00</td>
-                        <td>
-                            <!-- IMPROVEMENT 1: Interactive Toggle Switch -->
-                            <label class="switch">
-                                <input type="checkbox" th:checked="${item.available}" class="availability-toggle" th:data-id="${item.id}">
-                                <span class="slider"></span>
-                            </label>
-                        </td>
-                        <td>
-                            <a th:href="@{/admin/dashboard/menu/edit/{id}(id=${item.id})}" class="btn btn-warning btn-circle btn-sm" title="Edit">
-                                <i class="fas fa-pen"></i>
+        <!-- Kitchen Hub Card -->
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Live Operations</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Kitchen Hub</div>
+                            <p class="mt-2 text-gray-600 small">View and manage all incoming orders in real-time.</p>
+                            <a th:href="@{/kitchen/hub/{id}(id=${restaurantId})}" class="btn btn-warning mt-2">
+                                <i class="fas fa-fw fa-utensils"></i> Go to Kitchen Hub
                             </a>
-                            <!-- This button is now ready for our JavaScript -->
-                            <button class="btn btn-danger btn-circle btn-sm btn-delete"
-                                    th:data-id="${item.id}"
-                                    th:data-name="${item.name}"
-                                    data-toggle="modal"
-                                    data-target="#deleteConfirmModal"
-                                    title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- IMPROVEMENT 2: Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalLabel">Confirm Deletion</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to delete the item: <strong id="itemName"></strong>?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- IMPROVEMENT 3: Toast Notification Container -->
-    <div class="toast-container">
-        <!-- Toasts will be appended here by JavaScript -->
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- NEW: MODAL HANDLING ---
-            const deleteModal = $('#deleteConfirmModal');
-            let itemToDeleteId = null;
-
-            deleteModal.on('show.bs.modal', function (event) {
-                const button = $(event.relatedTarget);
-                const itemName = button.data('name');
-                itemToDeleteId = button.data('id');
-
-                const modal = $(this);
-                modal.find('#itemName').text(itemName);
-            });
-
-            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-                if (itemToDeleteId) {
-                    deleteItem(itemToDeleteId);
-                }
-                deleteModal.modal('hide');
-            });
-
-            // --- NEW: AVAILABILITY TOGGLE HANDLING ---
-            document.querySelectorAll('.availability-toggle').forEach(toggle => {
-                toggle.addEventListener('change', function() {
-                    const menuItemId = this.dataset.id;
-                    const isAvailable = this.checked;
-                    updateAvailability(menuItemId, isAvailable);
-                });
-            });
-        });
-
-        // --- NEW: Toast Notification Function ---
-        function showToast(message, type = 'success') {
-            const toastContainer = document.querySelector('.toast-container');
-            const toastId = `toast-${Date.now()}`;
-            const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
-            const textClass = 'text-white';
-
-            const toastHTML = `
-                <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="3000">
-                    <div class="toast-body ${bgClass} ${textClass}">
-                        ${message}
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-concierge-bell fa-3x text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
-            `;
-            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            </div>
+        </div>
 
-            const toastElement = $(`#${toastId}`);
-            toastElement.toast('show');
-            toastElement.on('hidden.bs.toast', function () {
-                this.remove();
-            });
-        }
+        <!-- Menu Management Card -->
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Content</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Menu Management</div>
+                            <p class="mt-2 text-gray-600 small">Add, edit, or change the availability of your items.</p>
+                            <!-- THIS LINK NOW GOES TO THE DEDICATED MENU PAGE -->
+                            <a th:href="@{/admin/dashboard/menu-management}" class="btn btn-primary mt-2">
+                                <i class="fas fa-fw fa-book-open"></i> Manage Your Menu
+                            </a>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-3x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        // --- UPDATED: Delete function with toast feedback ---
-        async function deleteItem(menuItemId) {
-            try {
-                const response = await fetch(`/api/admin/menu-items/${menuItemId}`, {
-                    method: 'DELETE'
-                });
+        <!-- QR Code Generator Card -->
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Tools</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Table QR Codes</div>
+                            <p class="mt-2 text-gray-600 small">Generate unique QR codes for each of your tables.</p>
+                            <a href="#" class="btn btn-success mt-2">
+                                <i class="fas fa-fw fa-qrcode"></i> Generate Codes
+                            </a>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-qrcode fa-3x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                if (response.ok) {
-                    const row = document.getElementById(`menu-item-row-${menuItemId}`);
-                    if (row) {
-                        row.remove();
-                        showToast('Menu item deleted successfully!', 'success');
-                    }
-                } else {
-                    showToast('Error: Could not delete the item.', 'danger');
-                }
-            } catch (error) {
-                console.error('Failed to delete menu item:', error);
-                showToast('An error occurred while deleting the item.', 'danger');
-            }
-        }
-
-        // --- NEW: Function to update availability ---
-        async function updateAvailability(menuItemId, isAvailable) {
-            try {
-                const response = await fetch(`/api/admin/menu-items/${menuItemId}/availability`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ isAvailable: isAvailable })
-                });
-
-                if (response.ok) {
-                    showToast(`Item availability updated.`, 'success');
-                } else {
-                    // Revert the toggle on failure
-                    document.querySelector(`[data-id='${menuItemId}'].availability-toggle`).checked = !isAvailable;
-                    showToast('Error: Could not update availability.', 'danger');
-                }
-            } catch (error) {
-                console.error('Failed to update availability:', error);
-                document.querySelector(`[data-id='${menuItemId}'].availability-toggle`).checked = !isAvailable;
-                showToast('An error occurred while updating availability.', 'danger');
-            }
-        }
-    </script>
+        <!-- Settings Card -->
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Configuration</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Restaurant Settings</div>
+                            <p class="mt-2 text-gray-600 small">Update your restaurant's name, address, and details.</p>
+                            <a href="#" class="btn btn-info mt-2">
+                                <i class="fas fa-fw fa-cogs"></i> Edit Settings
+                            </a>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-cogs fa-3x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 </html>
