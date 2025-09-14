@@ -219,7 +219,7 @@
                 const response = await fetch(`/api/admin/menu-items/${menuItemId}/availability`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ available: isAvailable }) // Ensure the key is 'available'
+                    body: JSON.stringify({ isAvailable: isAvailable }) // Ensure the key is 'isAvailable'
                 });
                 if (response.ok) {
                     showToast('Item availability updated.');
