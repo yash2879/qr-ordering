@@ -2,6 +2,7 @@ package in.tablese.tablese_core.config;
 
 import in.tablese.tablese_core.constants.WebConfigConstants;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,6 +30,9 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    @Value("${application.cors.allowed-origins}")
+    private String allowedOrigins;
 
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
@@ -85,11 +89,25 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(WebConfigConstants.ALLOWED_ORIGINS));
+
+        // 1. Use setAllowedOriginPatterns for more flexibility.
+        //    This correctly handles wildcards and is required if allowCredentials is true.
+        configuration.setAllowedOriginPatterns(List.of(allowedOrigins.split(",")));
+
+        // 2. Define the allowed HTTP methods.
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+        // 3. Allow all headers.
         configuration.setAllowedHeaders(List.of("*"));
+
+        // 4. IMPORTANT: Allow credentials (needed for authenticated APIs).
+        configuration.setAllowCredentials(true);
+
+        // 5. Register the configuration for all paths.
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
+        // 6. Return the configured source.
         return source;
     }
 
