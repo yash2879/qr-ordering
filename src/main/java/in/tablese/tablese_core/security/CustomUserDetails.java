@@ -1,4 +1,4 @@
-package in.tablese.tablese_core.service;
+package in.tablese.tablese_core.security;
 
 import in.tablese.tablese_core.model.User;
 import org.springframework.security.core.GrantedAuthority;

@@ -2,6 +2,7 @@ package in.tablese.tablese_core.service;
 
 import in.tablese.tablese_core.model.User;
 import in.tablese.tablese_core.repository.UserRepository;
+import in.tablese.tablese_core.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,6 +21,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
         // Instead of building a default User, we now return our custom one
-        return new in.tablese.tablese_core.service.CustomUserDetails(user);
+        return new CustomUserDetails(user);
     }
 }

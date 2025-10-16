@@ -47,6 +47,10 @@ public class MenuService {
         // This uses the custom method we defined in the repository
         return menuItemRepository.findByRestaurantIdAndIsActiveTrue(restaurantId);
     }
+
+    public List<MenuItem> findAllByRestaurantId(Long restaurantId) {
+        return menuItemRepository.findAllByRestaurantId(restaurantId);
+    }
     
     // Method to get a single menu item by its ID
     public MenuItem getMenuItemById(Long menuItemId) {

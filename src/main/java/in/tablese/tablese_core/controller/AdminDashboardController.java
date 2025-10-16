@@ -1,7 +1,7 @@
 package in.tablese.tablese_core.controller;
 
 import in.tablese.tablese_core.model.MenuItem;
-import in.tablese.tablese_core.service.CustomUserDetails;
+import in.tablese.tablese_core.security.CustomUserDetails;
 import in.tablese.tablese_core.service.MenuService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

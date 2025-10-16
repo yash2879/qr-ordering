@@ -6,21 +6,48 @@ import in.tablese.tablese_core.dto.MenuItemDto;
 import in.tablese.tablese_core.exception.ResourceNotFoundException;
 import in.tablese.tablese_core.mapper.MenuItemMapper;
 import in.tablese.tablese_core.model.MenuItem;
-import in.tablese.tablese_core.service.CustomUserDetails;
+import in.tablese.tablese_core.security.CustomUserDetails;
 import in.tablese.tablese_core.service.MenuService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/admin/menu-items")
 @RequiredArgsConstructor
 public class AdminMenuController {
 
     private final MenuService menuService;
+
+    @GetMapping
+    public ResponseEntity<List<MenuItemDto>> getMenuItemsForAdmin(@AuthenticationPrincipal CustomUserDetails currentUser) {
+        // Securely get the restaurant ID from the logged-in user
+        Long restaurantId = currentUser.getRestaurantId();
+
+        // Call a service method to get ALL menu items for this restaurant
+        List<MenuItem> menuItems = menuService.findAllByRestaurantId(restaurantId);
+
+        // Convert the list of entities to a list of DTOs
+        List<MenuItemDto> menuItemDtos = menuItems.stream()
+                .map(MenuItemMapper::toDto)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(menuItemDtos);
+    }
+
+    @GetMapping("/{menuItemId}")
+    public ResponseEntity<MenuItemDto> getMenuItemById(@PathVariable Long menuItemId) {
+        MenuItem menuItem = menuService.getMenuItemById(menuItemId);
+        return ResponseEntity.ok(MenuItemMapper.toDto(menuItem));
+    }
 
     @PostMapping
     public ResponseEntity<MenuItemDto> addMenuItem(@Valid @RequestBody CreateOrUpdateMenuItemRequest request,
@@ -60,12 +87,14 @@ public class AdminMenuController {
         // 2. Get the restaurant ID directly and securely from the logged-in user's details.
         Long restaurantId = currentUser.getRestaurantId();
 
+        log.info(String.valueOf(request.isAvailable()));
+
         // 3. Pass all necessary, trusted information to the service layer.
         // The service should still verify that the menu item `id` belongs to `restaurantId`
         // as a final layer of protection.
         try {
             menuService.updateAvailability(restaurantId, id, request.isAvailable());
-            return ResponseEntity.ok().build();
+            return ResponseEntity.noContent().build();
         } catch (ResourceNotFoundException e) {
             // Handle cases where the item doesn't exist or doesn't belong to the restaurant
             return ResponseEntity.notFound().build();
