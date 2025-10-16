@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +47,7 @@ public class OrderService {
         newOrder.setRestaurant(restaurant);
         newOrder.setTableNumber(request.tableNumber());
         newOrder.setStatus("NEW");
-        newOrder.setOrderTime(LocalDateTime.now());
+        newOrder.setOrderTime(LocalDateTime.now(ZoneOffset.UTC));
 
         List<OrderItem> orderItems = new ArrayList<>();
 

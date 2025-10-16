@@ -1,5 +1,6 @@
 package in.tablese.tablese_core.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -19,7 +20,10 @@ public class CustomerOrder {
     @Column(nullable = false)
     private String status; // e.g., "NEW", "PREPARING", "COMPLETED"
 
-    private LocalDateTime orderTime = LocalDateTime.now();
+    @Column(nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    @Temporal(TemporalType.TIMESTAMP)
+    private LocalDateTime orderTime;
 
     // An order can have many individual order items (e.g., 2x Pizza, 1x Coke)
     @OneToMany(mappedBy = "customerOrder", cascade = CascadeType.ALL)
