@@ -1,7 +1,7 @@
 package in.tablese.tablese_core.config;
 
 import in.tablese.tablese_core.constants.WebConfigConstants;
-import lombok.Value;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -24,6 +24,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint(WebConfigConstants.WEBSOCKET_PATH)
-                .setAllowedOrigins(WebConfigConstants.ALLOWED_ORIGINS);
+                .setAllowedOrigins(allowedOrigins.split(","));
     }
 }
