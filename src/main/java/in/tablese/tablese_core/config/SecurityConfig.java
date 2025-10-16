@@ -52,7 +52,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // --- PUBLIC ENDPOINTS ---
                         // Explicitly permit all requests to our authentication controller
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/health/**").permitAll()
 
                         // Explicitly permit the WebSocket handshake endpoint
                         .requestMatchers("/ws/**").permitAll()
